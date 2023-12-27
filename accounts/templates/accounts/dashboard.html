@@ -1,7 +1,7 @@
 {% extends 'accounts/main.html' %}
 
 {% block content %}
-      {% include 'accounts/status.html'  %}
+    {% include 'accounts/status.html'  %}
     <br>
     <div class="row">
       <div class="col-md-5">
@@ -12,10 +12,16 @@
             <table class="table table-sm">
                 <tr>
                     <th></th>
-                    <th>Clientes</th>
-                    <th>Pedidos</th>
+                    <th>Cliente</th>
+                    <th>Telefono</th>
                 </tr>
-
+                {% for customer in customers %}
+                  <tr>
+                      <td><a class="btn btn-sm btn-info" href="{% url 'customer' customer.id %}">Ver</a></td>
+                      <td>{{customer.name}} </td>
+                      <td>{{customer.phone}} </td>
+                  </tr>
+                {% endfor%}
             </table>
 
         </div>
@@ -24,16 +30,25 @@
         <h5>ULTIMOS 5 PEDIDOS:</h5>
         <hr>
         <div class="card card-body">
-            <a class="btn btn-primary btn-sm btn-block" href="">Crear Pedido</a>
+            <a class="btn btn-primary btn-sm btn-block" href="{% url 'create_order' %}">Crear Pedido</a>
             <table class="table table-sm">
                 <tr>
-                    <th></th>
                     <th>Producto</th>
                     <th>Fecha Pedido</th>
                     <th>Estado</th>
                     <th>Actualizar</th>
                     <th>Eliminar</th>
                 </tr>
+
+                {% for order in orders %}
+                  <tr>
+                    <td>{{order.product}}</td>
+                    <td>{{order.date_created}}</td>
+                    <td>{{order.status}}</td>
+                    <td><a class="btn btn-sm btn-info" href="{% url 'update_order' order.id %}">Actualizar</a></td>
+                    <td><a class="btn btn-sm btn-danger" href="{% url 'delete_order' order.id %}">Eliminar</a></td>
+                  </tr>
+                {% endfor%}
 
             </table>
         </div>
