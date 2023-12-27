@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
+from django.forms import inlineformset_factory
 from .models import *
 from .forms import OrderForm
 
@@ -36,7 +37,7 @@ def customer(request, pk_test):
     context = {'customer': customer, 'orders': orders, 'order_count' : order_count}
     return render(request, 'accounts/customer.html', context)
 
-
+''' crea orden en una sola linea
 def createOrder(request):
     form = OrderForm()
     if request.method == 'POST':
@@ -48,6 +49,28 @@ def createOrder(request):
             return redirect('/')
 
     context = {'form': form}
+    return render(request, 'accounts/order_form.html', context)
+'''
+def createOrder(request, pk):
+
+    # creamos una instancia multiple, padre , hijo , y que columnas mostraremos
+    OrderFormSet = inlineformset_factory(Customer, Order, fields=('product', 'status'), extra = 10 )
+    customer = Customer.objects.get(id=pk)
+    # asignamos el cliente de acuerdo a su pk como valor inicial por defecto. luego CAMBIAMOS
+    #form = OrderForm(initial={'customer':customer})
+
+    # luego creamos una instancia para el formset y luego INSTANCIAMOS
+    formset = OrderFormSet(queryset=Order.objects.none(), instance = customer)
+
+    if request.method == 'POST':
+        # enviamos los datos dentro del form
+        formset = OrderFormSet(request.POST, instance=customer)
+        if formset.is_valid():
+            formset.save()
+            # retornamos al mismo template
+            return redirect('/')
+
+    context = {'formset': formset}
     return render(request, 'accounts/order_form.html', context)
 
 
