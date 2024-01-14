@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.forms import inlineformset_factory
+from django.contrib.auth.models import Group
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
@@ -8,7 +9,7 @@ from django.contrib.auth.decorators import login_required
 from .models import *
 from .forms import OrderForm, CreateUserForm
 from .filters import OrderFilter
-from .decorators import unauthenticated_user
+from .decorators import unauthenticated_user, allowed_users, admin_only
 # Create your views here.
 
 @unauthenticated_user
@@ -18,9 +19,15 @@ def registerPage(request):
     if request.method == 'POST':
         form = CreateUserForm(request.POST)
         if form.is_valid():
-            form.save()
-            user = form.cleaned_data.get('username')
-            messages.success(request, 'Cuenta creada para ' + user)
+            # form.save()
+            user = form.save()
+            username = form.cleaned_data.get('username')
+
+            # hacer q el nuevo usuario sea agregado al grupo customer
+            group = Group.objects.get(name='customer')
+            user.groups.add(group)
+
+            messages.success(request, 'Cuenta creada para ' + username)
 
             return redirect('login')
 
@@ -50,6 +57,8 @@ def logoutUser(request):
 
 
 @login_required(login_url='login')
+# @allowed_users(allowed_roles=['admin'])
+@admin_only
 def home(request):
     orders = Order.objects.all()
     customers = Customer.objects.all()
@@ -66,16 +75,18 @@ def home(request):
 
 def userPage(request):
     context = {}
-    return redirect(request,'accounts/user.html', context)
+    return render(request,'accounts/user.html', context)
 
 
 @login_required(login_url='login')
+@allowed_users(allowed_roles=['admin'])
 def products(request):
     products = Product.objects.all()
     return render(request, 'accounts/products.html', {'products': products})
 
 
 @login_required(login_url='login')
+@allowed_users(allowed_roles=['admin'])
 def customer(request, pk_test):
     customer = Customer.objects.get(id=pk_test)
 
@@ -107,6 +118,7 @@ def createOrder(request):
 
 
 @login_required(login_url='login')
+@allowed_users(allowed_roles=['admin'])
 def createOrder(request, pk):
     # creamos una instancia multiple, padre , hijo , y que columnas mostraremos
     OrderFormSet = inlineformset_factory(Customer, Order, fields=('product', 'status'), extra=10)
@@ -130,6 +142,7 @@ def createOrder(request, pk):
 
 
 @login_required(login_url='login')
+@allowed_users(allowed_roles=['admin'])
 def updateOrder(request, pk):
     # instanciar order con los valores de order cuanto de damos actualizar
     order = Order.objects.get(id=pk)
@@ -148,6 +161,7 @@ def updateOrder(request, pk):
 
 
 @login_required(login_url='login')
+@allowed_users(allowed_roles=['admin'])
 def deleteOrder(request, pk):
     order = Order.objects.get(id=pk)
     if request.method == 'POST':
