@@ -26,6 +26,10 @@ def registerPage(request):
             # hacer q el nuevo usuario sea agregado al grupo customer
             group = Group.objects.get(name='customer')
             user.groups.add(group)
+            # agregamos en campo user al Customer segun el modelo y la relacion One to One
+            Customer.objects.create(
+                user=user,
+            )
 
             messages.success(request, 'Cuenta creada para ' + username)
 
@@ -73,8 +77,16 @@ def home(request):
 
     return render(request, 'accounts/dashboard.html', context)
 
+# configuramos la pagina de usuario para q solo un cliente vea sus pedidos
+@login_required(login_url='login')
+@allowed_users(allowed_roles=['customer'])
 def userPage(request):
-    context = {}
+    orders = request.user.customer.order_set.all()
+    total_orders = orders.count()
+    delivered = orders.filter(status='Delivered').count()
+    pending = orders.filter(status='Pending').count()
+
+    context = {'orders':orders,'total_orders': total_orders, 'delivered': delivered,'pending': pending}
     return render(request,'accounts/user.html', context)
 
 
