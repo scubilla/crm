@@ -23,14 +23,6 @@ def registerPage(request):
             user = form.save()
             username = form.cleaned_data.get('username')
 
-            # hacer q el nuevo usuario sea agregado al grupo customer
-            group = Group.objects.get(name='customer')
-            user.groups.add(group)
-            # agregamos en campo user al Customer segun el modelo y la relacion One to One
-            Customer.objects.create(
-                user=user,
-            )
-
             messages.success(request, 'Cuenta creada para ' + username)
 
             return redirect('login')
